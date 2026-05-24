@@ -1,0 +1,1172 @@
+
+    
+HTML Source: https://www.kiwifx.nz/dashboard.html
+
+    
+1 <!DOCTYPE html>
+2 <html lang="en">
+3 <head>
+4 <meta charset="UTF-8">
+5 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+6 <title>KiwiFX — Mission Control</title>
+7 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+8 <link rel="manifest" href="/manifest.json">
+9 <meta name="theme-color" content="#00E87B">
+10 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23050a12'/%3E%3Ctext x='7' y='28' font-family='sans-serif' font-weight='700' font-size='22' fill='%2300E87B'%3EK%3C/text%3E%3C/svg%3E">
+11 <style>
+12 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+13 *{box-sizing:border-box;margin:0;padding:0}
+14 :root{
+15   --bg:#050a12;--dark:#080e1a;--surface:rgba(15,23,48,0.55);--surface2:rgba(15,23,48,0.35);--surface3:rgba(15,23,48,0.8);
+16   --edge:rgba(255,255,255,0.06);--edge2:rgba(255,255,255,0.1);--edge3:rgba(255,255,255,0.14);
+17   --green:#00E87B;--green2:rgba(0,232,123,0.12);--green3:rgba(0,232,123,0.05);
+18   --red:#FF3B5C;--red2:rgba(255,59,92,0.12);--red3:rgba(255,59,92,0.06);
+19   --blue:#3B82F6;--blue2:rgba(59,130,246,0.12);
+20   --amber:#FF9F1C;--amber2:rgba(255,159,28,0.12);
+21   --teal:#00D4FF;--teal2:rgba(0,212,255,0.12);
+22   --white:#f0f2f8;--gray:#8892a8;--gray2:#4a5568;--gray3:#2d3748;
+23   --sidebar-w:250px;
+24   --glass:rgba(15,23,48,0.55);--glass-border:rgba(255,255,255,0.06);
+25   --blur:blur(20px);--radius:14px;--radius-sm:10px;
+26   --font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+27 }
+28 body{font-family:var(--font-body);background:var(--bg);color:var(--white);min-height:100vh;font-size:13px;display:flex}
+29 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 0%,rgba(0,232,123,0.05) 0%,transparent 45%),radial-gradient(ellipse at 85% 100%,rgba(59,130,246,0.04) 0%,transparent 45%);pointer-events:none;z-index:0}
+30 
+31 /* ===== SIDEBAR ===== */
+32 .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--dark);border-right:1px solid var(--glass-border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;backdrop-filter:var(--blur);transition:width 0.25s cubic-bezier(0.4,0,0.2,1)}
+33 
+34 .sidebar-logo{padding:20px 20px;border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:3px}
+35 .logo-k{font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--white);letter-spacing:3px}
+36 .logo-dot{width:4px;height:4px;border-radius:50%;background:var(--green);opacity:0.6;margin:0 2px}
+37 .logo-fx{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--green);letter-spacing:4px}
+38 
+39 .sidebar-account{padding:16px 20px;border-bottom:1px solid var(--edge);background:linear-gradient(135deg,rgba(0,232,123,0.04),transparent)}
+40 .acc-label{font-size:9px;color:var(--gray2);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:6px;font-family:var(--font-body);font-weight:600}
+41 .acc-balance{font-size:20px;font-weight:700;color:var(--white);font-family:var(--font-display);letter-spacing:0.5px}
+42 .acc-bal-row{display:flex;align-items:center;gap:8px}
+43 .acc-row{display:flex;align-items:center;gap:6px;margin-top:8px}
+44 .conn-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+45 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+46 .conn-dot{animation:pulse 2s infinite}
+47 .conn-txt{font-size:10px;color:var(--green);font-family:var(--font-body);font-weight:500;letter-spacing:0.3px}
+48 .eye-btn{background:transparent;border:none;color:var(--gray2);cursor:pointer;padding:2px;display:inline-flex;align-items:center;transition:color 0.15s;flex-shrink:0}
+49 .eye-btn:hover{color:var(--gray)}
+50 
+51 .sidebar-nav{flex:1;padding:14px 0;overflow-y:auto}
+52 .nav-section{padding:6px 20px 4px;font-size:9px;color:var(--gray2);letter-spacing:2.5px;text-transform:uppercase;font-family:var(--font-body);font-weight:600;margin-top:4px}
+53 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;transition:all 0.2s;border-left:2px solid transparent;color:var(--gray);font-size:12.5px;font-family:var(--font-body);font-weight:500;letter-spacing:0.2px;text-decoration:none}
+54 .nav-item:hover{color:var(--white);background:rgba(255,255,255,0.02)}
+55 .nav-item.active{color:var(--green);border-left-color:var(--green);background:rgba(0,232,123,0.05)}
+56 .nav-item svg{flex-shrink:0;width:16px;height:16px;opacity:0.5}
+57 .nav-item.active svg{opacity:1}
+58 .nav-badge{margin-left:auto;background:var(--green);color:var(--bg);font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;font-family:var(--font-body)}
+59 
+60 .sidebar-footer{padding:14px 20px;border-top:1px solid var(--edge)}
+61 .sidebar-user{display:flex;align-items:center;gap:10px}
+62 .user-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--green),#00b863);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);font-family:var(--font-display);flex-shrink:0}
+63 .user-name{font-size:11px;color:var(--white);font-family:var(--font-body);font-weight:600}
+64 .user-plan{font-size:10px;color:var(--green);font-family:var(--font-body);font-weight:500}
+65 .btn-logout{margin-left:auto;background:transparent;border:none;color:var(--gray2);cursor:pointer;font-size:18px;transition:color 0.15s}
+66 .btn-logout:hover{color:var(--red)}
+67 
+68 /* ===== MAIN ===== */
+69 .main-wrap{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;transition:margin-left 0.25s cubic-bezier(0.4,0,0.2,1)}
+70 
+71 .header{background:rgba(5,10,18,0.85);border-bottom:1px solid var(--edge);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:var(--blur)}
+72 .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--teal),rgba(0,232,123,0.15),transparent);opacity:0.35}
+73 .header-left{display:flex;align-items:center;gap:14px}
+74 .page-title{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--white);letter-spacing:2px;text-transform:uppercase}
+75 .page-sub{font-size:11px;color:var(--gray);font-family:var(--font-body)}
+76 .header-right{display:flex;align-items:center;gap:10px}
+77 .hdr-clock{font-size:10px;color:var(--gray2);letter-spacing:0.5px;font-family:var(--font-body);font-weight:500}
+78 .hamburger-btn{background:transparent;border:none;color:var(--gray);cursor:pointer;padding:4px 6px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+79 .hamburger-btn:hover{color:var(--green);background:rgba(0,232,123,0.06)}
+80 
+81 .btn{background:transparent;border:1px solid var(--edge2);padding:6px 16px;color:var(--gray);font-size:11px;cursor:pointer;transition:all 0.2s;letter-spacing:0.8px;font-family:var(--font-body);font-weight:600;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-radius:8px}
+82 .btn:hover{border-color:var(--white);color:var(--white);background:rgba(255,255,255,0.03)}
+83 .btn-amber{border-color:rgba(0,232,123,0.2);color:var(--green);background:rgba(0,232,123,0.04)}
+84 .btn-amber:hover{background:rgba(0,232,123,0.1);border-color:rgba(0,232,123,0.35)}
+85 .btn-teal{border-color:rgba(59,130,246,0.2);color:var(--blue);background:rgba(59,130,246,0.04)}
+86 .btn-teal:hover{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.35)}
+87 
+88 /* Content */
+89 .content{flex:1;padding:20px 24px;overflow-y:auto}
+90 .page{display:none}.page.active{display:block}
+91 
+92 /* Panel — glassmorphism */
+93 .panel{background:var(--glass);border:1px solid var(--glass-border);padding:20px;margin-bottom:14px;position:relative;border-radius:var(--radius);overflow:hidden;backdrop-filter:var(--blur)}
+94 .panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,rgba(0,212,255,0.12),transparent 50%)}
+95 .panel-title{font-family:var(--font-display);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+96 
+97 /* KPI Cards — premium */
+98 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+99 .kpi{background:var(--glass);border:1px solid var(--glass-border);padding:16px 18px;position:relative;overflow:hidden;border-radius:var(--radius);backdrop-filter:var(--blur)}
+100 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+101 .kpi.up::before{background:linear-gradient(90deg,var(--green),transparent)}
+102 .kpi.dn::before{background:linear-gradient(90deg,var(--red),transparent)}
+103 .kpi.info::before{background:linear-gradient(90deg,var(--blue),transparent)}
+104 .kpi.warn::before{background:linear-gradient(90deg,var(--teal),transparent)}
+105 .kpi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+106 .kpi-label{font-size:9.5px;color:var(--gray2);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);font-weight:600}
+107 .kpi-icon{width:16px;height:16px;opacity:0.2;color:var(--gray);flex-shrink:0}
+108 .kpi-value{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:0.3px;line-height:1.1}
+109 .kpi-sub{font-size:10.5px;color:var(--gray2);margin-top:6px;font-family:var(--font-body);font-weight:500}
+110 .kpi-spark{display:flex;align-items:end;gap:1px;height:18px;margin-top:8px}
+111 .kpi-spark span{width:3px;border-radius:1px;background:var(--green);opacity:0.3}
+112 .cg{color:var(--green)}.cr{color:var(--red)}.ca{color:var(--teal)}.ct{color:var(--blue)}
+113 
+114 /* Grid layouts */
+115 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+116 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+117 .grid-2-1{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;margin-bottom:14px}
+118 
+119 /* Bot Status */
+120 .bot-list{display:flex;flex-direction:column;gap:6px}
+121 .bot-item{background:var(--surface2);border:1px solid var(--edge);padding:10px 12px;display:flex;align-items:center;gap:9px;border-left:2px solid var(--green);border-radius:var(--radius-sm)}
+122 .bot-item.running{border-left-color:var(--green)}
+123 .bot-item.stopped{border-left-color:var(--red)}
+124 .bot-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+125 .bot-dot.run{background:var(--green);animation:pulse 2s infinite}
+126 .bot-dot.stop{background:var(--red)}
+127 .bot-pair{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--white);letter-spacing:0.8px;min-width:70px}
+128 .bot-ea{font-size:10.5px;color:var(--gray2);font-family:var(--font-body);font-weight:500}
+129 .bot-stat{margin-left:auto;text-align:right}
+130 .bot-profit{font-size:11px;font-weight:600;font-family:var(--font-body)}
+131 .bot-time{font-size:10px;color:var(--gray2);font-family:var(--font-body)}
+132 
+133 /* Market Hours */
+134 .market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+135 .market-card{background:var(--glass);border:1px solid var(--glass-border);padding:16px;text-align:center;border-top:2px solid var(--edge2);transition:all 0.3s;border-radius:var(--radius);backdrop-filter:var(--blur)}
+136 .market-card.open{border-top-color:var(--green);background:rgba(0,232,123,0.04)}
+137 .market-card.closed{border-top-color:var(--red)}
+138 .market-card.soon{border-top-color:var(--amber)}
+139 .market-name{font-size:14px;font-weight:700;color:var(--white);font-family:var(--font-display);letter-spacing:1px;margin-bottom:4px}
+140 .market-city{font-size:10.5px;color:var(--gray2);font-family:var(--font-body);font-weight:500;margin-bottom:8px}
+141 .market-time{font-size:22px;font-weight:700;font-family:var(--font-display);letter-spacing:2px;margin-bottom:6px}
+142 .market-status{font-size:9.5px;letter-spacing:2px;font-family:var(--font-body);font-weight:600;text-transform:uppercase;padding:3px 10px;border-radius:6px}
+143 .ms-open{color:var(--green);background:var(--green2);border:1px solid rgba(0,232,123,0.2)}
+144 .ms-closed{color:var(--red);background:var(--red2);border:1px solid rgba(255,59,92,0.2)}
+145 .ms-soon{color:var(--amber);background:var(--amber2);border:1px solid rgba(255,159,28,0.2)}
+146 .market-hours{font-size:10.5px;color:var(--gray2);font-family:var(--font-body);margin-top:6px}
+147 
+148 /* Timeline */
+149 .timeline{background:var(--surface2);border:1px solid var(--edge);padding:14px;margin-bottom:14px;border-radius:var(--radius-sm)}
+150 .timeline-bar{height:32px;background:var(--surface3);border-radius:6px;position:relative;margin-bottom:8px;overflow:hidden}
+151 .timeline-seg{position:absolute;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--font-body);letter-spacing:1px;font-weight:600}
+152 .ts-sydney{background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.15);color:var(--teal)}
+153 .ts-tokyo{background:rgba(255,159,28,0.12);border:1px solid rgba(255,159,28,0.15);color:var(--amber)}
+154 .ts-london{background:rgba(0,232,123,0.12);border:1px solid rgba(0,232,123,0.15);color:var(--green)}
+155 .ts-newyork{background:rgba(255,59,92,0.12);border:1px solid rgba(255,59,92,0.15);color:var(--red)}
+156 .tl-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--gray2);font-family:var(--font-body)}
+157 .tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--green);opacity:0.7;border-radius:1px}
+158 
+159 /* Scanner */
+160 .scan-row{display:flex;gap:8px;margin-bottom:0.75rem;flex-wrap:wrap}
+161 .f-input{background:var(--surface2);border:none;border-bottom:1px solid var(--edge2);padding:8px 4px;color:var(--white);font-size:12px;outline:none;transition:border-color 0.2s;flex:1;min-width:140px;font-family:var(--font-body);border-radius:0}
+162 .f-input:focus{border-bottom-color:var(--green)}
+163 .f-input::placeholder{color:var(--gray2)}
+164 .f-select{background:var(--surface2);border:1px solid var(--edge);padding:7px 10px;color:var(--white);font-size:11px;outline:none;font-family:var(--font-body);font-weight:500;letter-spacing:0.5px;border-radius:8px}
+165 .pairs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:4px;margin-bottom:0.75rem}
+166 .pair-cb{display:flex;align-items:center;gap:5px;font-size:11px;padding:5px 7px;border:1px solid var(--edge);cursor:pointer;background:var(--surface2);color:var(--gray);transition:all 0.2s;font-family:var(--font-body);font-weight:500;border-radius:6px}
+167 .pair-cb:has(input:checked){border-color:rgba(0,232,123,0.3);color:var(--green);background:var(--green3)}
+168 .pair-cb input{accent-color:var(--green)}
+169 
+170 /* Signals */
+171 .signals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+172 .signal-card{background:var(--glass);border:1px solid var(--glass-border);padding:16px;border-left:2px solid var(--edge);border-radius:var(--radius);backdrop-filter:var(--blur)}
+173 .signal-card.buy{border-left-color:var(--green)}.signal-card.sell{border-left-color:var(--red)}
+174 .sig-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+175 .sig-pair{font-size:15px;font-weight:700;color:var(--white);letter-spacing:2px;font-family:var(--font-display)}
+176 .sig-badge{font-size:9px;padding:3px 12px;font-weight:600;letter-spacing:2px;font-family:var(--font-body);border-radius:6px}
+177 .bb{background:var(--green2);color:var(--green);border:1px solid rgba(0,232,123,0.25)}
+178 .bs{background:var(--red2);color:var(--red);border:1px solid rgba(255,59,92,0.25)}
+179 .bn{background:var(--surface2);color:var(--gray);border:1px solid var(--edge)}
+180 .levels{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+181 .level{background:var(--surface2);border:1px solid var(--edge);padding:6px 8px;border-radius:8px}
+182 .lv-lbl{font-size:10px;color:var(--gray2);margin-bottom:2px;letter-spacing:1px;text-transform:uppercase;font-family:var(--font-body);font-weight:500}
+183 .lv-val{font-size:12px;font-weight:600;font-family:var(--font-body)}
+184 .sig-footer{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--gray2);font-family:var(--font-body)}
+185 .sbar{width:50px;height:3px;background:var(--surface3);overflow:hidden;margin-right:4px;border-radius:2px}
+186 .sfill{height:100%;border-radius:2px}
+187 
+188 /* Journal */
+189 .journal-source{display:flex;gap:6px;margin-bottom:1rem}
+190 .src-btn{padding:6px 16px;font-size:11px;border:1px solid var(--edge2);background:transparent;color:var(--gray);cursor:pointer;font-family:var(--font-body);font-weight:600;letter-spacing:0.8px;text-transform:uppercase;transition:all 0.2s;border-radius:8px}
+191 .src-btn.on{border-color:rgba(0,232,123,0.3);color:var(--green);background:var(--green3)}
+192 .journal-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:1rem;padding:14px;background:var(--surface2);border:1px solid var(--edge);border-radius:var(--radius-sm)}
+193 .jf-label{font-size:9.5px;color:var(--gray2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;font-family:var(--font-body);font-weight:600}
+194 .jf-input,.jf-select{width:100%;background:var(--surface3);border:none;border-bottom:1px solid var(--edge2);padding:7px 4px;color:var(--white);font-size:12px;outline:none;font-family:var(--font-body);border-radius:0}
+195 .jf-input:focus,.jf-select:focus{border-bottom-color:var(--green)}
+196 .webhook-box{background:var(--surface2);border:1px solid var(--edge);padding:14px;margin-bottom:1rem;border-radius:var(--radius-sm)}
+197 .webhook-url{font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;color:var(--teal);background:var(--surface3);padding:8px 12px;border:1px solid rgba(0,212,255,0.15);word-break:break-all;margin-top:6px;border-radius:8px}
+198 
+199 /* Calendar */
+200 .cal-month{font-size:14px;font-weight:700;color:var(--white);font-family:var(--font-display);letter-spacing:2px}
+201 .cal-btn{background:transparent;border:1px solid var(--edge2);width:30px;height:30px;color:var(--gray);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;border-radius:8px}
+202 .cal-btn:hover{border-color:var(--green);color:var(--green)}
+203 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+204 .cal-day-lbl{text-align:center;font-size:10px;color:var(--gray2);letter-spacing:1.5px;font-family:var(--font-body);font-weight:600;padding:4px 0;text-transform:uppercase}
+205 .cal-day{min-height:64px;background:var(--surface2);border:1px solid var(--edge);padding:5px;cursor:pointer;transition:all 0.2s;position:relative;border-radius:8px}
+206 .cal-day:hover{border-color:var(--edge2);background:var(--surface3)}
+207 .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+208 .cal-day.win{border-color:rgba(0,232,123,0.25);background:rgba(0,232,123,0.04)}
+209 .cal-day.loss{border-color:rgba(255,59,92,0.25);background:rgba(255,59,92,0.04)}
+210 .cal-day.today{border-color:var(--green);box-shadow:0 0 12px rgba(0,232,123,0.1)}
+211 .cal-num{font-size:11px;color:var(--gray);font-family:var(--font-body);font-weight:500}
+212 .cal-pnl{font-size:12px;font-weight:700;font-family:var(--font-display);margin-top:2px}
+213 .cal-cnt{font-size:10px;color:var(--gray2);font-family:var(--font-body);margin-top:1px}
+214 
+215 /* Trade table */
+216 .trade-table{width:100%;border-collapse:collapse}
+217 .trade-table th{font-size:10px;color:var(--gray2);letter-spacing:1.5px;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--edge);font-family:var(--font-body);text-align:left;font-weight:600}
+218 .trade-table td{font-size:12px;padding:8px;border-bottom:1px solid var(--edge);font-family:var(--font-body)}
+219 .trade-table tr:last-child td{border-bottom:none}
+220 .trade-table tr:hover td{background:rgba(255,255,255,0.02)}
+221 
+222 /* Performance */
+223 .chart-wrap{position:relative;height:180px}
+224 .perf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+225 .ps{background:var(--glass);border:1px solid var(--glass-border);padding:14px;text-align:center;border-radius:var(--radius);backdrop-filter:var(--blur)}
+226 .ps-val{font-size:28px;font-weight:700;font-family:var(--font-display)}
+227 .ps-lbl{font-size:9.5px;color:var(--gray2);font-family:var(--font-body);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+228 
+229 /* Empty */
+230 .empty-state{text-align:center;padding:2.5rem;color:var(--gray2);font-size:11px;border:1px dashed var(--edge2);font-family:var(--font-body);border-radius:var(--radius)}
+231 
+232 /* Bottom bar */
+233 .bottom-bar{background:rgba(5,10,18,0.9);border-top:1px solid var(--edge);padding:5px 24px;display:flex;align-items:center;gap:16px;font-size:9px;color:var(--gray2);letter-spacing:1.5px;font-family:var(--font-body);font-weight:500;text-transform:uppercase;backdrop-filter:var(--blur)}
+234 .bb-dot{width:4px;height:4px;border-radius:50%;background:var(--green);opacity:0.4;flex-shrink:0}
+235 .bb-dot.t{background:var(--blue)}.bb-dot.g{background:var(--green);opacity:0.7}
+236 
+237 /* ===== SIDEBAR TOGGLE ===== */
+238 .sidebar.collapsed{width:60px;overflow:hidden}
+239 .sidebar.collapsed .acc-balance,.sidebar.collapsed .acc-label,.sidebar.collapsed .acc-row,
+240 .sidebar.collapsed .nav-section,.sidebar.collapsed .user-name,.sidebar.collapsed .user-plan,
+241 .sidebar.collapsed .logo-fx,.sidebar.collapsed .logo-k,.sidebar.collapsed .logo-dot,
+242 .sidebar.collapsed .acc-bal-row{display:none}
+243 .sidebar.collapsed .nav-item{justify-content:center;padding:10px 0;letter-spacing:0;font-size:0;gap:0}
+244 .sidebar.collapsed .nav-item svg{flex-shrink:0}
+245 .sidebar.collapsed .nav-badge{display:none}
+246 .sidebar.collapsed .sidebar-footer{padding:0.75rem 0;justify-content:center}
+247 .sidebar.collapsed .sidebar-user{justify-content:center}
+248 .sidebar.collapsed .btn-logout{display:none}
+249 .sidebar.collapsed .sidebar-logo{justify-content:center;padding:1.25rem 0}
+250 
+251 /* Scrollbar */
+252 ::-webkit-scrollbar{width:5px}
+253 ::-webkit-scrollbar-track{background:transparent}
+254 ::-webkit-scrollbar-thumb{background:var(--gray3);border-radius:3px}
+255 ::-webkit-scrollbar-thumb:hover{background:var(--gray2)}
+256 </style>
+257 </head>
+258 <body>
+259 
+260 <!-- ===== SIDEBAR ===== -->
+261 <div class="sidebar">
+262   <div class="sidebar-logo">
+263     <span class="logo-k">KIW</span><span class="logo-dot"></span><span class="logo-fx">FX</span>
+264   </div>
+265 
+266   <div class="sidebar-account">
+267     <div class="acc-label">Account Balance</div>
+268     <div class="acc-bal-row">
+269       <div class="acc-balance" id="sb-balance">$50,000.00</div>
+270       <button class="eye-btn" onclick="toggleBalVis()" title="Toggle balance visibility">
+271         <svg id="eye-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+272       </button>
+273     </div>
+274     <div class="acc-row">
+275       <div class="conn-dot" id="sb-dot"></div>
+276       <span class="conn-txt" id="sb-conn">MT5 Connected</span>
+277     </div>
+278   </div>
+279 
+280   <nav class="sidebar-nav">
+281     <div class="nav-section">Main</div>
+282     <a class="nav-item active" onclick="showPage('dashboard')" href="#">
+283       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Dashboard
+284     </a>
+285     <a class="nav-item" onclick="showPage('signals')" href="#">
+286       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Live Signals
+287     </a>
+288     <a class="nav-item" onclick="showPage('bots')" href="#">
+289       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 13h0M15 13h0"/><path d="M12 2v4M2 14h2M20 14h2"/></svg> Trading Bots
+290       <span class="nav-badge" id="active-bots-count">0</span>
+291     </a>
+292     <div class="nav-section">Analysis</div>
+293     <a class="nav-item" onclick="showPage('market-hours')" href="#">
+294       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg> Market Hours
+295     </a>
+296     <a class="nav-item" href="analyze.html">
+297       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 1 5 5c0 1.5-.5 2.5-1.5 3.5L12 14l-3.5-3.5C7.5 9.5 7 8.5 7 7a5 5 0 0 1 5-5z"/><path d="M12 14v8"/><path d="M8 18h8"/></svg> AI Analysis
+298     </a>
+299     <a class="nav-item" href="calendar.html">
+300       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="8" y="14" width="3" height="3" rx="0.5"/></svg> Eco Calendar
+301     </a>
+302     <a class="nav-item" href="calculators.html">
+303       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><rect x="7" y="10" width="3" height="3" rx="0.5"/><rect x="14" y="10" width="3" height="3" rx="0.5"/><rect x="7" y="15" width="3" height="3" rx="0.5"/><rect x="14" y="15" width="3" height="3" rx="0.5"/></svg> Calculators
+304     </a>
+305     <div class="nav-section">Tournament</div>
+306     <a class="nav-item" href="tournament.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9H3v6h3M18 9h3v6h-3M12 3v3M12 18v3"/><rect x="7" y="6" width="10" height="12" rx="2"/><path d="M10 12h4M12 10v4"/></svg> EA Tournament</a>
+307     <div class="nav-section">Journal</div>
+308     <a class="nav-item" href="journal.html">
+309       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="15" y2="14"/></svg> Trade Journal
+310     </a>
+311     <a class="nav-item" onclick="showPage('performance')" href="#">
+312       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Performance
+313     </a>
+314     <div class="nav-section">System</div>
+315     <a class="nav-item" onclick="showPage('settings')" href="#">
+316       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings
+317     </a>
+318   </nav>
+319 
+320   <div class="sidebar-footer">
+321     <div class="sidebar-user">
+322       <div class="user-avatar">R</div>
+323       <div>
+324         <div class="user-name">Raull</div>
+325         <div class="user-plan">PRO · NZ</div>
+326       </div>
+327       <button class="btn-logout" onclick="logout()" title="Logout">⏻</button>
+328     </div>
+329   </div>
+330 </div>
+331 
+332 <!-- ===== MAIN ===== -->
+333 <div class="main-wrap">
+334   <div class="header">
+335     <div class="header-left">
+336       <button class="hamburger-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+337         <svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="0" y1="1" x2="16" y2="1"/><line x1="0" y1="7" x2="16" y2="7"/><line x1="0" y1="13" x2="16" y2="13"/></svg>
+338       </button>
+339       <div>
+340         <div class="page-title" id="page-title">Dashboard</div>
+341         <div class="page-sub" id="page-sub"></div>
+342       </div>
+343     </div>
+344     <div class="header-right">
+345       <span class="hdr-clock" id="hdr-clock"></span>
+346       <button class="btn btn-teal" onclick="showPage('signals')" style="font-size:10px">Scan Market</button>
+347       <a href="analyze.html" class="btn btn-amber" style="font-size:10px">AI Analysis</a>
+348     </div>
+349   </div>
+350 
+351   <div class="content">
+352 
+353     <!-- ===== DASHBOARD HOME ===== -->
+354     <div class="page active" id="page-dashboard">
+355       <div class="kpi-grid" id="kpi-cards">
+356         <div class="kpi warn">
+357           <div class="kpi-top"><span class="kpi-label">Total Balance</span><svg class="kpi-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1"/></svg></div>
+358           <div class="kpi-value ca" id="kpi-balance">$50,000</div>
+359           <div class="kpi-sub">Demo account</div>
+360           <div class="kpi-spark"><span style="height:6px"></span><span style="height:9px"></span><span style="height:7px"></span><span style="height:11px"></span><span style="height:8px"></span><span style="height:13px"></span><span style="height:10px"></span><span style="height:15px"></span><span style="height:12px"></span><span style="height:18px"></span></div>
+361         </div>
+362         <div class="kpi" id="kpi-pnl-card">
+363           <div class="kpi-top"><span class="kpi-label">Total P&L</span><svg class="kpi-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+364           <div class="kpi-value" id="kpi-pnl">$0.00</div>
+365           <div class="kpi-sub" id="kpi-pnl-pct">0.00% of balance</div>
+366         </div>
+367         <div class="kpi info">
+368           <div class="kpi-top"><span class="kpi-label">Win Rate</span><svg class="kpi-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+369           <div class="kpi-value ct" id="kpi-wr">0%</div>
+370           <div class="kpi-sub" id="kpi-wl">0W / 0L</div>
+371         </div>
+372         <div class="kpi" id="kpi-rr-card">
+373           <div class="kpi-top"><span class="kpi-label">Risk / Reward</span><svg class="kpi-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18"/><path d="M5 7l7-4 7 4"/><path d="M3 17l2-10M5 7l2 10"/><path d="M17 17l2-10M19 7l2 10"/></svg></div>
+374           <div class="kpi-value" id="kpi-rr">0.00</div>
+375           <div class="kpi-sub">Avg per trade</div>
+376         </div>
+377       </div>
+378 
+379       <div class="grid-2-1">
+380         <div class="panel">
+381           <div class="panel-title">
+382             Equity Curve
+383             <div style="display:flex;gap:4px">
+384               <button class="btn" style="padding:3px 10px;font-size:9px;border-radius:6px" onclick="setEqRange('all')" id="eq-all">ALL</button>
+385               <button class="btn btn-amber" style="padding:3px 10px;font-size:9px;border-radius:6px" onclick="setEqRange('30')" id="eq-30">30D</button>
+386               <button class="btn" style="padding:3px 10px;font-size:9px;border-radius:6px" onclick="setEqRange('7')" id="eq-7">7D</button>
+387             </div>
+388           </div>
+389           <div class="chart-wrap" style="height:200px"><canvas id="eqChart"></canvas></div>
+390         </div>
+391         <div class="panel">
+392           <div class="panel-title">Bot Status</div>
+393           <div class="bot-list" id="bot-list">
+394             <div class="empty-state" style="padding:1rem;font-size:11px">No active bots detected</div>
+395           </div>
+396         </div>
+397       </div>
+398 
+399       <div class="grid-2">
+400         <div class="panel">
+401           <div class="panel-title">Performance by Pair</div>
+402           <div class="chart-wrap"><canvas id="pairChart"></canvas></div>
+403         </div>
+404         <div class="panel">
+405           <div class="panel-title">Recent Trades</div>
+406           <div id="recent-trades-list"><div class="empty-state" style="padding:1rem;font-size:11px">No trades logged yet</div></div>
+407         </div>
+408       </div>
+409     </div>
+410 
+411     <!-- ===== LIVE SIGNALS ===== -->
+412     <div class="page" id="page-signals">
+413       <div class="panel">
+414         <div class="panel-title">Market Scanner</div>
+415         <div class="scan-row">
+416           <select id="tf-sel" class="f-select">
+417             <option value="15min">15 MIN</option>
+418             <option value="30min">30 MIN</option>
+419             <option value="1h">1 HOUR</option>
+420           </select>
+421           <button class="btn btn-amber" onclick="fetchSignals()" style="padding:8px 16px;white-space:nowrap">Scan Pairs</button>
+422           <button class="btn" id="auto-btn" onclick="toggleAuto()" style="padding:8px 12px">Auto 5min</button>
+423         </div>
+424         <div class="pairs-grid" id="pairs-grid"></div>
+425       </div>
+426 
+427       <!-- TradingView Chart (always visible) -->
+428       <div style="margin-top:14px">
+429         <div class="panel" style="padding-bottom:0">
+430           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+431             <div class="panel-title" style="margin-bottom:0">Live Chart</div>
+432             <div style="display:flex;gap:6px;align-items:center">
+433               <select id="tv-pair" class="f-select" style="padding:5px 10px;font-size:11px" onchange="loadTV()">
+434                 <option>GBPUSD</option><option>GBPJPY</option><option>AUDUSD</option><option>NZDUSD</option>
+435                 <option>NZDJPY</option><option>NZDCAD</option><option>AUDJPY</option><option>AUDCAD</option>
+436                 <option>AUDNZD</option><option>USDJPY</option><option>EURJPY</option><option>CHFJPY</option>
+437                 <option>EURUSD</option>
+438               </select>
+439               <select id="tv-tf" class="f-select" style="padding:5px 10px;font-size:11px" onchange="loadTV()">
+440                 <option value="15">15m</option><option value="30">30m</option><option value="60">1H</option>
+441                 <option value="240">4H</option><option value="D">1D</option>
+442               </select>
+443             </div>
+444           </div>
+445           <div id="tradingview_chart" style="height:440px;border-radius:0 0 var(--radius) var(--radius);overflow:hidden"></div>
+446         </div>
+447       </div>
+448 
+449       <!-- Signals results (below chart) -->
+450       <div id="signals-container" style="margin-top:14px"><div class="empty-state" style="padding:1.2rem;font-size:11px">Select pairs above and hit Scan — signals use EMA, MA200 and RSI</div></div>
+451     </div>
+452 
+453     <!-- ===== TRADING BOTS ===== -->
+454     <div class="page" id="page-bots">
+455       <div class="panel">
+456         <div class="panel-title">Active Bots</div>
+457         <div class="bot-list" id="bots-full-list">
+458           <div class="empty-state">No bots connected — install Iron Core and configure your license key</div>
+459         </div>
+460       </div>
+461       <div class="panel">
+462         <div class="panel-title">How to connect your EA</div>
+463         <div style="font-size:12px;color:var(--gray);font-family:var(--font-body);line-height:1.8;letter-spacing:0.5px">
+464           <p>1. Download Iron Core from your account</p>
+465           <p>2. Copy to MT4/MT5 → MQL4/MQL5 → Experts folder</p>
+466           <p>3. Compile with F7 in MetaEditor</p>
+467           <p>4. Drag EA to chart → enter your License Key in the inputs</p>
+468           <p>5. Enable Allow WebRequest in Tools → Options → Expert Advisors</p>
+469           <p style="margin-top:8px;color:var(--green)">Your bot will appear here automatically once it starts trading.</p>
+470         </div>
+471       </div>
+472     </div>
+473 
+474     <!-- ===== MARKET HOURS ===== -->
+475     <div class="page" id="page-market-hours">
+476       <div class="market-grid" id="market-cards"></div>
+477 
+478       <div class="panel">
+479         <div class="panel-title">Session Timeline (UTC)</div>
+480         <div class="timeline">
+481           <div style="display:flex;gap:8px;margin-bottom:6px;font-size:11px;font-family:var(--font-body);letter-spacing:1px">
+482             <span style="color:var(--teal)">■ Sydney</span>
+483             <span style="color:var(--amber)">■ Tokyo</span>
+484             <span style="color:var(--green)">■ London</span>
+485             <span style="color:var(--red)">■ New York</span>
+486           </div>
+487           <div class="timeline-bar" id="timeline-bar">
+488             <!-- Sydney: 21:00-06:00 UTC = 21/24*100 to 6/24*100 -->
+489             <div class="timeline-seg ts-sydney" style="left:87.5%;width:25%;border-radius:2px 0 0 2px">SYD</div>
+490             <div class="timeline-seg ts-sydney" style="left:0%;width:25%;border-radius:0 2px 2px 0">SYD</div>
+491             <!-- Tokyo: 23:00-08:00 UTC -->
+492             <div class="timeline-seg ts-tokyo" style="left:95.8%;width:37.5%">TYO</div>
+493             <div class="timeline-seg ts-tokyo" style="left:0%;width:33.3%">TYO</div>
+494             <!-- London: 08:00-17:00 UTC -->
+495             <div class="timeline-seg ts-london" style="left:33.3%;width:37.5%">LON</div>
+496             <!-- New York: 13:00-22:00 UTC -->
+497             <div class="timeline-seg ts-newyork" style="left:54.2%;width:37.5%">NYC</div>
+498             <div class="tl-now" id="tl-now"></div>
+499           </div>
+500           <div class="tl-labels">
+501             <span>00:00</span><span>03:00</span><span>06:00</span><span>09:00</span>
+502             <span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span>
+503           </div>
+504         </div>
+505       </div>
+506 
+507       <div class="panel">
+508         <div class="panel-title">Best Trading Pairs by Session</div>
+509         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+510           <div style="background:var(--surface2);border:1px solid var(--edge);padding:0.875rem;border-radius:var(--radius-sm)">
+511             <div style="font-size:11px;color:var(--teal);font-family:var(--font-body);letter-spacing:1px;margin-bottom:6px">SYDNEY / TOKYO</div>
+512             <div style="font-size:11px;color:var(--gray);font-family:var(--font-body);line-height:1.8">AUD/USD<br>AUD/JPY<br>NZD/USD<br>NZD/JPY<br>USD/JPY</div>
+513           </div>
+514           <div style="background:var(--surface2);border:1px solid var(--edge);padding:0.875rem;border-radius:var(--radius-sm)">
+515             <div style="font-size:11px;color:var(--amber);font-family:var(--font-body);letter-spacing:1px;margin-bottom:6px">TOKYO</div>
+516             <div style="font-size:11px;color:var(--gray);font-family:var(--font-body);line-height:1.8">USD/JPY<br>EUR/JPY<br>GBP/JPY<br>CHF/JPY<br>AUD/JPY</div>
+517           </div>
+518           <div style="background:var(--surface2);border:1px solid var(--edge);padding:0.875rem;border-radius:var(--radius-sm)">
+519             <div style="font-size:11px;color:var(--green);font-family:var(--font-body);letter-spacing:1px;margin-bottom:6px">LONDON</div>
+520             <div style="font-size:11px;color:var(--gray);font-family:var(--font-body);line-height:1.8">GBP/USD<br>EUR/USD<br>GBP/JPY<br>EUR/GBP<br>USD/CHF</div>
+521           </div>
+522           <div style="background:var(--surface2);border:1px solid var(--edge);padding:0.875rem;border-radius:var(--radius-sm)">
+523             <div style="font-size:11px;color:var(--red);font-family:var(--font-body);letter-spacing:1px;margin-bottom:6px">NEW YORK</div>
+524             <div style="font-size:11px;color:var(--gray);font-family:var(--font-body);line-height:1.8">EUR/USD<br>GBP/USD<br>USD/CAD<br>USD/JPY<br>XAU/USD</div>
+525           </div>
+526         </div>
+527       </div>
+528     </div>
+529 
+530     <!-- ===== TRADE JOURNAL ===== -->
+531     <div class="page" id="page-journal">
+532       <div class="grid-2">
+533         <div class="panel">
+534           <div class="panel-title">Log Trade Manually</div>
+535           <div class="journal-source">
+536             <button class="src-btn on" id="src-manual" onclick="setSource('manual')">Manual</button>
+537             <button class="src-btn" id="src-mt" onclick="setSource('mt')">MT4 / MT5</button>
+538             <button class="src-btn" id="src-tv" onclick="setSource('tv')">TradingView</button>
+539           </div>
+540           <div id="manual-form">
+541             <div class="journal-form">
+542               <div><div class="jf-label">Pair</div><select id="j-pair" class="jf-select"><option>GBPUSD</option><option>GBPJPY</option><option>AUDUSD</option><option>NZDUSD</option><option>NZDJPY</option><option>NZDCAD</option><option>AUDJPY</option><option>AUDCAD</option><option>AUDNZD</option><option>USDJPY</option><option>EURJPY</option><option>CHFJPY</option></select></div>
+543               <div><div class="jf-label">Type</div><select id="j-type" class="jf-select"><option value="buy">BUY</option><option value="sell">SELL</option></select></div>
+544               <div><div class="jf-label">Lot</div><input type="number" id="j-lot" class="jf-input" placeholder="0.10" step="0.01"></div>
+545               <div><div class="jf-label">Entry</div><input type="number" id="j-entry" class="jf-input" placeholder="1.2650" step="0.00001"></div>
+546               <div><div class="jf-label">Exit</div><input type="number" id="j-exit" class="jf-input" placeholder="1.2700" step="0.00001"></div>
+547               <div><div class="jf-label">P&L $</div><input type="number" id="j-pnl" class="jf-input" placeholder="50.00"></div>
+548               <div><div class="jf-label">Source</div><select id="j-source" class="jf-select"><option value="MT5">MT5</option><option value="MT4">MT4</option><option value="TradingView">TradingView</option><option value="Manual">Manual</option></select></div>
+549               <div><div class="jf-label">Date</div><input type="date" id="j-date" class="jf-input"></div>
+550             </div>
+551             <button class="btn btn-amber" onclick="addJournalTrade()" style="width:100%;padding:10px;justify-content:center">+ Log Trade</button>
+552           </div>
+553           <div id="mt-webhook" style="display:none">
+554             <div class="webhook-box">
+555               <div style="font-size:11px;color:var(--green);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin-bottom:6px">MT4/MT5 Auto Connection</div>
+556               <p style="font-size:12px;color:var(--gray);font-family:var(--font-body);line-height:1.6">Your Iron Core EA sends trades automatically. Install the EA, enter your license key and trades will appear here in real time.</p>
+557             </div>
+558           </div>
+559           <div id="tv-webhook" style="display:none">
+560             <div class="webhook-box">
+561               <div style="font-size:11px;color:var(--green);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-body);margin-bottom:6px">TradingView Webhook URL</div>
+562               <p style="font-size:12px;color:var(--gray);font-family:var(--font-body);line-height:1.6;margin-bottom:8px">In TradingView alert, set the webhook URL to:</p>
+563               <div class="webhook-url">https://www.kiwifx.nz/api/trade</div>
+564               <p style="font-size:11px;color:var(--gray);font-family:var(--font-body);margin-top:8px">Alert message body (JSON):</p>
+565               <div class="webhook-url">{"license_key":"KFX-XXXX-XXXX-XXXX","pair":"{{ticker}}","type":"{{strategy.order.action}}","profit":{{strategy.netprofit}},"lot":0.1,"source":"TradingView"}</div>
+566             </div>
+567           </div>
+568         </div>
+569 
+570         <div class="panel">
+571           <div class="panel-title">
+572             Trade Calendar
+573             <div style="display:flex;gap:6px;align-items:center">
+574               <button class="cal-btn" onclick="prevMonth()">‹</button>
+575               <span class="cal-month" id="cal-month">—</span>
+576               <button class="cal-btn" onclick="nextMonth()">›</button>
+577             </div>
+578           </div>
+579           <div class="cal-grid" id="cal-grid"></div>
+580         </div>
+581       </div>
+582 
+583       <div class="panel">
+584         <div class="panel-title">
+585           Trade History
+586           <button class="btn" onclick="exportCSV()" style="padding:3px 10px;font-size:11px">Export CSV</button>
+587         </div>
+588         <div id="journal-table-wrap"><div class="empty-state">No trades logged yet</div></div>
+589       </div>
+590     </div>
+591 
+592     <!-- ===== PERFORMANCE ===== -->
+593     <div class="page" id="page-performance">
+594       <div class="perf-stats" id="perf-stats"></div>
+595       <div class="grid-2">
+596         <div class="panel"><div class="panel-title">Equity Curve</div><div class="chart-wrap"><canvas id="perf-eq-chart"></canvas></div></div>
+597         <div class="panel"><div class="panel-title">Monthly P&L</div><div class="chart-wrap"><canvas id="monthly-chart"></canvas></div></div>
+598       </div>
+599       <div class="panel"><div class="panel-title">Performance by Pair</div><div class="chart-wrap" style="height:200px"><canvas id="perf-pair-chart"></canvas></div></div>
+600     </div>
+601 
+602     <!-- ===== SETTINGS ===== -->
+603     <div class="page" id="page-settings">
+604       <div class="panel">
+605         <div class="panel-title">Access Code</div>
+606         <div style="display:flex;gap:8px">
+607           <input type="password" id="new-pass" class="f-input" placeholder="New password">
+608           <input type="password" id="new-pass2" class="f-input" placeholder="Confirm password">
+609           <button class="btn btn-amber" onclick="changePass()" style="padding:8px 16px;white-space:nowrap">Save</button>
+610         </div>
+611         <div id="pass-msg" style="font-size:11px;margin-top:6px;font-family:var(--font-body);letter-spacing:1px"></div>
+612       </div>
+613       <div class="panel">
+614         <div class="panel-title">System Info</div>
+615         <p style="font-size:12px;color:var(--gray);font-family:var(--font-body);line-height:1.8;letter-spacing:0.5px">KiwiFX personal Forex intelligence system. Real-time signals using EMA9, EMA21, MA200 and RSI with live data from TwelveData API. Trade journal supports MT4, MT5 and TradingView. Built with Claude (Anthropic). Symbol represents the Kiwi leaf (NZ), trading candles and Maori patterns — connecting New Zealand and Brazil.</p>
+616       </div>
+617     </div>
+618 
+619   </div><!-- end content -->
+620 
+621   <div class="bottom-bar">
+622     <div class="bb-dot"></div>
+623     <span id="bb-stardate">Stardate --</span>
+624     <div class="bb-dot t"></div>
+625     <span>KiwiFX · Mission Control · NZ</span>
+626     <div class="bb-dot g"></div>
+627     <span id="bb-trades">Trades: 0</span>
+628     <div class="bb-dot"></div>
+629     <span id="bb-pnl">P&L: $0.00</span>
+630   </div>
+631 </div><!-- end main-wrap -->
+632 
+633 <script>
+634 if(!sessionStorage.getItem('fx_auth'))window.location.href='login.html';
+635 
+636 // ===================== SIDEBAR TOGGLE =====================
+637 function toggleSidebar(){
+638   const sb=document.querySelector('.sidebar');
+639   const mw=document.querySelector('.main-wrap');
+640   const collapsed=sb.classList.toggle('collapsed');
+641   mw.style.marginLeft=collapsed?'60px':'var(--sidebar-w)';
+642   localStorage.setItem('sb_collapsed',collapsed?'1':'0');
+643 }
+644 (function(){
+645   if(localStorage.getItem('sb_collapsed')==='1'){
+646     document.querySelector('.sidebar').classList.add('collapsed');
+647     document.querySelector('.main-wrap').style.marginLeft='60px';
+648   }
+649 })();
+650 
+651 // ===================== STATE =====================
+652 const PAIRS=['GBPUSD','GBPJPY','AUDUSD','NZDUSD','NZDJPY','NZDCAD','AUDJPY','AUDCAD','AUDNZD','USDJPY','EURJPY','CHFJPY'];
+653 let selPairs=new Set(JSON.parse(localStorage.getItem('selPairs')||'["GBPUSD","GBPJPY","AUDUSD","NZDUSD","USDJPY"]'));
+654 let trades=JSON.parse(localStorage.getItem('fx_trades')||'[]');
+655 let allData={},priceChartInst=null,eqChartInst=null,pairChartInst=null,autoTimer=null;
+656 let currentMonth=new Date().toISOString().slice(0,7);
+657 let perfEqInst=null,monthlyInst=null,perfPairInst=null;
+658 let accountBalance=50000;
+659 let balHidden=localStorage.getItem('fx_bal_hidden')==='1';
+660 let balRawValue='$50,000.00';
+661 
+662 // ===================== CLOCK =====================
+663 setInterval(()=>{
+664   const n=new Date();
+665   const t=n.toLocaleTimeString('en-GB')+' NZT';
+666   document.getElementById('hdr-clock').textContent=t;
+667   document.getElementById('bb-stardate').textContent=`Stardate ${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;
+668   updateMarketHours();
+669   updateTimelineNow();
+670 },1000);
+671 
+672 // ===================== NAV =====================
+673 const pageTitles={
+674   dashboard:['Dashboard',''],
+675   signals:['Live Signals',''],
+676   bots:['Trading Bots',''],
+677   'market-hours':['Market Hours',''],
+678   journal:['Trade Journal',''],
+679   performance:['Performance',''],
+680   settings:['Settings','']
+681 };
+682 function showPage(p){
+683   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+684   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+685   document.getElementById('page-'+p).classList.add('active');
+686   document.querySelectorAll('.nav-item').forEach(el=>{
+687     if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+p+"'"))el.classList.add('active');
+688   });
+689   const titles=pageTitles[p]||[p,'KiwiFX'];
+690   document.getElementById('page-title').textContent=titles[0];
+691   document.getElementById('page-sub').textContent=titles[1];
+692   if(p==='performance')renderPerformancePage();
+693   if(p==='journal'){renderCalendar();renderJournalTable();}
+694   if(p==='dashboard')renderDashboard();
+695 }
+696 function logout(){sessionStorage.clear();window.location.href='login.html';}
+697 
+698 // ===================== PAIRS GRID =====================
+699 const grid=document.getElementById('pairs-grid');
+700 PAIRS.forEach(p=>{const l=document.createElement('label');l.className='pair-cb';l.innerHTML=`<input type="checkbox" value="${p}" ${selPairs.has(p)?'checked':''}> ${p}`;l.querySelector('input').addEventListener('change',e=>{if(e.target.checked)selPairs.add(p);else selPairs.delete(p);localStorage.setItem('selPairs',JSON.stringify([...selPairs]));});grid.appendChild(l);});
+701 
+702 // ===================== SIGNALS =====================
+703 function calcEMA(data,p){const k=2/(p+1);let e=data[0];return data.map((v,i)=>{if(i===0)return e;e=v*k+e*(1-k);return e;});}
+704 function calcRSI(data,p=14){let g=0,l=0;for(let i=1;i<=p;i++){const d=data[i]-data[i-1];if(d>0)g+=d;else l-=d;}let ag=g/p,al=l/p;for(let i=p+1;i<data.length;i++){const d=data[i]-data[i-1];ag=(ag*(p-1)+(d>0?d:0))/p;al=(al*(p-1)+(d<0?-d:0))/p;}return al===0?100:100-100/(1+ag/al);}
+705 function generateSignal(closes,pair){
+706   if(closes.length<30)return null;
+707   const e9=calcEMA(closes,9),e21=calcEMA(closes,21),e200=calcEMA(closes,200),rsi=calcRSI(closes),last=closes[closes.length-1],ce9=e9[e9.length-1],ce21=e21[e21.length-1],ce200=e200[e200.length-1],pe9=e9[e9.length-2],pe21=e21[e21.length-2];
+708   const crossUp=pe9<=pe21&&ce9>ce21,crossDown=pe9>=pe21&&ce9<ce21,above=last>ce200,below=last<ce200;
+709   let dir='NEUTRAL',str=0,reasons=[];
+710   if(crossUp&&above){dir='BUY';str=65;reasons=['EMA Cross','Above MA200'];}
+711   else if(crossDown&&below){dir='SELL';str=65;reasons=['EMA Cross','Below MA200'];}
+712   else if(ce9>ce21&&above){dir='BUY';str=38;reasons=['EMA9 > EMA21'];}
+713   else if(ce9<ce21&&below){dir='SELL';str=38;reasons=['EMA9 < EMA21'];}
+714   if(dir==='BUY'&&rsi>50&&rsi<70){str+=18;reasons.push('RSI '+rsi.toFixed(0));}
+715   else if(dir==='SELL'&&rsi<50&&rsi>30){str+=18;reasons.push('RSI '+rsi.toFixed(0));}
+716   const jpy=pair.includes('JPY'),pm=jpy?0.01:0.0001,sl=jpy?35:25,t1=jpy?25:18,t2=jpy?55:38,dp=jpy?3:5;
+717   let entry=last,SL,TP1,TP2;
+718   if(dir==='BUY'){SL=+(entry-sl*pm).toFixed(dp);TP1=+(entry+t1*pm).toFixed(dp);TP2=+(entry+t2*pm).toFixed(dp);}
+719   else if(dir==='SELL'){SL=+(entry+sl*pm).toFixed(dp);TP1=+(entry-t1*pm).toFixed(dp);TP2=+(entry-t2*pm).toFixed(dp);}
+720   else{SL=TP1=TP2=0;}
+721   return{dir,str:Math.min(100,Math.max(0,str)),entry:+entry.toFixed(dp),SL,TP1,TP2,rsi:+rsi.toFixed(1),reasons};
+722 }
+723 async function fetchSignals(){
+724   const tf=document.getElementById('tf-sel').value,pairs=[...selPairs];
+725   if(!pairs.length){alert('Select at least one pair.');return;}
+726   document.getElementById('sb-conn').textContent='Scanning...';
+727   document.getElementById('signals-container').innerHTML='<div class="empty-state">Scanning live market data...</div>';
+728   const results=[];
+729   const lk=localStorage.getItem('kfx_license')||localStorage.getItem('fx_license')||'';
+730   for(const pair of pairs){
+731     try{
+732       const r=await fetch(`/api/analyze`,{method:'POST',headers:{'Content-Type':'application/json','x-license-key':lk},body:JSON.stringify({pair:pair.slice(0,3)+'/'+pair.slice(3),timeframe:tf,type:'simple',modules:['indicators','entry']})});
+733       const d=await r.json();
+734       if(d.success&&d.analysis){
+735         const a=d.analysis;
+736         results.push({pair,dir:a.direction||'NEUTRAL',str:a.strength||50,entry:a.entry||'—',SL:a.sl||'—',TP1:a.tp1||'—',TP2:a.tp2||'—',rsi:a.rsi||'—',reasons:a.reasons||['AI analysis']});
+737       } else {
+738         const closes=[];
+739         const sig=generateSignal(closes,pair);
+740         if(sig)results.push({pair,...sig});
+741       }
+742       await new Promise(r=>setTimeout(r,200));
+743     }catch(e){results.push({pair,dir:'ERROR',error:e.message});}
+744   }
+745   renderSignals(results);
+746   document.getElementById('sb-conn').textContent='MT5 Connected';
+747   document.querySelector('#page-signals .panel-title').textContent=`Market Scanner — Updated ${new Date().toLocaleTimeString('en-GB')}`;
+748 }
+749 function renderSignals(results){
+750   if(!results.length){document.getElementById('signals-container').innerHTML='<div class="empty-state">No signals detected</div>';return;}
+751   const sorted=results.sort((a,b)=>{const o={BUY:0,SELL:1,NEUTRAL:2,ERROR:3};return(o[a.dir]||3)-(o[b.dir]||3);});
+752   const html=sorted.map(s=>{
+753     if(s.dir==='ERROR')return`<div class="signal-card"><div class="sig-top"><span class="sig-pair">${s.pair}</span><span class="sig-badge bn">ERR</span></div><div style="font-size:11px;color:var(--red);font-family:var(--font-body)">${s.error}</div></div>`;
+754     const cls=s.dir==='BUY'?'buy':s.dir==='SELL'?'sell':'',bc=s.dir==='BUY'?'bb':s.dir==='SELL'?'bs':'bn',sc=s.str>=60?'#00E87B':s.str>=35?'#3B82F6':'#1a2530',lvls=s.dir!=='NEUTRAL'?`<div class="levels"><div class="level"><div class="lv-lbl">Entry</div><div class="lv-val" style="color:var(--white)">${s.entry}}</div></div><div class="level"><div class="lv-lbl">Stop Loss</div><div class="lv-val" style="color:var(--red)">${s.SL}</div></div><div class="level"><div class="lv-lbl">TP1 / TP2</div><div class="lv-val" style="color:var(--green)">${s.TP1} / ${s.TP2}</div></div><div class="level"><div class="lv-lbl">RSI</div><div class="lv-val" style="color:var(--teal)">${s.rsi}</div></div></div>`:'';
+755     return`<div class="signal-card ${cls}"><div class="sig-top"><span class="sig-pair">${s.pair}</span><span class="sig-badge ${bc}">${s.dir}</span></div>${lvls}<div class="sig-footer"><span>${s.reasons.join(' · ')}</span><div style="display:flex;align-items:center;gap:4px"><div class="sbar"><div class="sfill" style="width:${s.str}%;background:${sc}"></div></div><span>${s.str}%</span></div></div></div>`;
+756   }).join('');
+757   document.getElementById('signals-container').innerHTML=`<div class="signals-grid">${html}</div>`;
+758 }
+759 function loadTV(){const pair=document.getElementById('tv-pair').value;const tfv=document.getElementById('tv-tf').value;const sym='FX:'+pair.slice(0,3)+pair.slice(3);document.getElementById('tradingview_chart').innerHTML='';const s=document.createElement('script');s.src='https://s3.tradingview.com/tv.js';s.onload=function(){new TradingView.widget({container_id:'tradingview_chart',symbol:sym,interval:tfv,theme:'dark',style:'1',locale:'en',toolbar_bg:'#050a12',enable_publishing:false,backgroundColor:'#050a12',gridColor:'rgba(255,255,255,0.04)',width:'100%',height:440,hide_side_toolbar:false,studies:['RSI@tv-basicstudies','MAExp@tv-basicstudies'],allow_symbol_change:true,save_image:false});};document.head.appendChild(s);}
+760 function toggleAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;document.getElementById('auto-btn').textContent='Auto 5min';return;}fetchSignals();autoTimer=setInterval(fetchSignals,300000);document.getElementById('auto-btn').textContent='Stop Auto';}
+761 
+762 // ===================== MARKET HOURS =====================
+763 const sessions={
+764   Sydney:{city:'Sydney, AU',open:21,close:6,color:'teal',pairs:'AUD/JPY · NZD/USD'},
+765   Tokyo:{city:'Tokyo, JP',open:23,close:8,color:'amber',pairs:'USD/JPY · EUR/JPY'},
+766   London:{city:'London, UK',open:8,close:17,color:'green',pairs:'GBP/USD · EUR/USD'},
+767   NewYork:{city:'New York, US',open:13,close:22,color:'red',pairs:'EUR/USD · GBP/USD'}
+768 };
+769 function updateMarketHours(){
+770   const now=new Date();
+771   const utcH=now.getUTCHours(),utcM=now.getUTCMinutes();
+772   const utcDec=utcH+utcM/60;
+773   const container=document.getElementById('market-cards');
+774   if(!container)return;
+775   container.innerHTML=Object.entries(sessions).map(([name,s])=>{
+776     let isOpen;
+777     if(s.open<s.close)isOpen=utcDec>=s.open&&utcDec<s.close;
+778     else isOpen=utcDec>=s.open||utcDec<s.close;
+779     // Local time for each city
+780     const offsets={Sydney:10,Tokyo:9,London:1,NewYork:-4};
+781     const localH=(utcH+offsets[name]+24)%24;
+782     const localM=String(now.getUTCMinutes()).padStart(2,'0');
+783     const timeStr=`${String(localH).padStart(2,'0')}:${localM}`;
+784     const status=isOpen?'OPEN':'CLOSED';
+785     const sc=isOpen?'ms-open':'ms-closed';
+786     const cc=isOpen?'open':'closed';
+787     const opensIn=!isOpen?`Opens in ${((s.open-utcDec+24)%24).toFixed(0)}h`:`Closes in ${((s.close-utcDec+24)%24).toFixed(0)}h`;
+788     return`<div class="market-card ${cc}">
+789       <div class="market-name">${name}</div>
+790       <div class="market-city">${s.city}</div>
+791       <div class="market-time">${timeStr}</div>
+792       <span class="market-status ${sc}">${status}</span>
+793       <div class="market-hours">${opensIn}</div>
+794     </div>`;
+795   }).join('');
+796 }
+797 function updateTimelineNow(){
+798   const el=document.getElementById('tl-now');
+799   if(!el)return;
+800   const now=new Date();
+801   const pct=(now.getUTCHours()*60+now.getUTCMinutes())/(24*60)*100;
+802   el.style.left=pct+'%';
+803 }
+804 
+805 // ===================== TRADE JOURNAL =====================
+806 document.getElementById('j-date').value=new Date().toISOString().split('T')[0];
+807 function setSource(s){
+808   ['manual','mt','tv'].forEach(x=>{document.getElementById('src-'+x).className='src-btn'+(x===s?' on':'');});
+809   document.getElementById('manual-form').style.display=s==='manual'?'block':'none';
+810   document.getElementById('mt-webhook').style.display=s==='mt'?'block':'none';
+811   document.getElementById('tv-webhook').style.display=s==='tv'?'block':'none';
+812 }
+813 function addJournalTrade(){
+814   const t={
+815     id:Date.now(),
+816     pair:document.getElementById('j-pair').value,
+817     type:document.getElementById('j-type').value,
+818     lot:parseFloat(document.getElementById('j-lot').value)||0.10,
+819     entry:parseFloat(document.getElementById('j-entry').value)||0,
+820     exit:parseFloat(document.getElementById('j-exit').value)||0,
+821     profit:parseFloat(document.getElementById('j-pnl').value)||0,
+822     source:document.getElementById('j-source').value,
+823     date:document.getElementById('j-date').value||new Date().toISOString().split('T')[0]
+824   };
+825   trades.push(t);
+826   localStorage.setItem('fx_trades',JSON.stringify(trades));
+827   renderCalendar();renderJournalTable();renderDashboard();
+828   document.getElementById('j-pnl').value='';
+829   document.getElementById('j-entry').value='';
+830   document.getElementById('j-exit').value='';
+831 }
+832 function removeTrade(id){trades=trades.filter(t=>t.id!==id);localStorage.setItem('fx_trades',JSON.stringify(trades));renderCalendar();renderJournalTable();renderDashboard();}
+833 function exportCSV(){
+834   const header='Date,Pair,Type,Lot,Entry,Exit,P&L,Source\n';
+835   const rows=trades.map(t=>`${t.date},${t.pair},${t.type.toUpperCase()},${t.lot},${t.entry||''},${t.exit||''},${t.profit},${t.source||''}`).join('\n');
+836   const blob=new Blob([header+rows],{type:'text/csv'});
+837   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kiwifx_trades.csv';a.click();
+838 }
+839 
+840 // ===================== CALENDAR =====================
+841 function renderCalendar(){
+842   const[y,m]=currentMonth.split('-').map(Number);
+843   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+844   document.getElementById('cal-month').textContent=`${months[m-1]} ${y}`;
+845   const firstDay=new Date(y,m-1,1).getDay();
+846   const daysInMonth=new Date(y,m,0).getDate();
+847   const today=new Date().toISOString().slice(0,10);
+848   // Group trades by day
+849   const byDay={};
+850   trades.forEach(t=>{
+851     const d=t.date;if(!byDay[d])byDay[d]={profit:0,count:0,wins:0,losses:0};
+852     byDay[d].profit+=parseFloat(t.profit||0);byDay[d].count++;
+853     if(t.profit>0)byDay[d].wins++;else if(t.profit<0)byDay[d].losses++;
+854   });
+855   const g=document.getElementById('cal-grid');g.innerHTML='';
+856   ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{const el=document.createElement('div');el.className='cal-day-lbl';el.textContent=d;g.appendChild(el);});
+857   for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='cal-day empty';g.appendChild(el);}
+858   for(let d=1;d<=daysInMonth;d++){
+859     const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+860     const data=byDay[ds];
+861     const el=document.createElement('div');
+862     let cls='cal-day';
+863     if(data)cls+=data.profit>=0?' win':' loss';
+864     if(ds===today)cls+=' today';
+865     el.className=cls;
+866     el.innerHTML=`<div class="cal-num">${d}</div>`;
+867     if(data){
+868       const p=data.profit.toFixed(2);
+869       el.innerHTML+=`<div class="cal-pnl" style="color:${data.profit>=0?'var(--green)':'var(--red)'}">${data.profit>=0?'+':''}$${p}</div><div class="cal-cnt">${data.count} trade${data.count>1?'s':''}</div>`;
+870     }
+871     g.appendChild(el);
+872   }
+873 }
+874 function prevMonth(){const[y,m]=currentMonth.split('-').map(Number);const d=new Date(y,m-2,1);currentMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;renderCalendar();}
+875 function nextMonth(){const[y,m]=currentMonth.split('-').map(Number);const d=new Date(y,m,1);currentMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;renderCalendar();}
+876 
+877 // ===================== JOURNAL TABLE =====================
+878 function renderJournalTable(){
+879   const w=document.getElementById('journal-table-wrap');
+880   if(!trades.length){w.innerHTML='<div class="empty-state">No trades logged yet</div>';return;}
+881   const rows=[...trades].sort((a,b)=>b.id-a.id).slice(0,50).map(t=>`
+882     <tr>
+883       <td style="color:var(--gray)">${t.date}</td>
+884       <td style="font-weight:600;letter-spacing:1px">${t.pair}</td>
+885       <td><span class="sig-badge ${t.type==='buy'?'bb':'bs'}" style="font-size:11px;padding:1px 7px">${t.type.toUpperCase()}</span></td>
+886       <td style="color:var(--gray)">${t.lot}</td>
+887       <td style="color:var(--white)">${s.entry}||'—'}</td>
+888       <td style="color:var(--gray)">${t.exit||'—'}</td>
+889       <td style="color:${parseFloat(t.profit)>=0?'var(--green)':'var(--red)'};font-weight:600">${parseFloat(t.profit)>=0?'+':''}$${parseFloat(t.profit).toFixed(2)}</td>
+890       <td style="color:var(--gray);font-size:11px">${t.source||'Manual'}</td>
+891       <td style="cursor:pointer;color:var(--gray2);font-size:11px" onclick="removeTrade(${t.id})">del</td>
+892     </tr>`).join('');
+893   w.innerHTML=`<table class="trade-table"><thead><tr><th>Date</th><th>Pair</th><th>Type</th><th>Lot</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Source</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+894 }
+895 
+896 // ===================== DASHBOARD =====================
+897 function renderDashboard(){
+898   const total=trades.reduce((s,t)=>s+parseFloat(t.profit||0),0);
+899   const wins=trades.filter(t=>t.profit>0),losses=trades.filter(t=>t.profit<0);
+900   const wr=trades.length?wins.length/trades.length*100:0;
+901   const avgW=wins.length?wins.reduce((s,t)=>s+t.profit,0)/wins.length:0;
+902   const avgL=losses.length?Math.abs(losses.reduce((s,t)=>s+t.profit,0)/losses.length):1;
+903   const rr=avgL?avgW/avgL:0;
+904   // KPI
+905   const pnlEl=document.getElementById('kpi-pnl');
+906   pnlEl.textContent=(total>=0?'+':'')+'$'+total.toFixed(2);
+907   pnlEl.className='kpi-value '+(total>=0?'cg':'cr');
+908   document.getElementById('kpi-pnl-pct').textContent=(total/accountBalance*100).toFixed(2)+'% of balance';
+909   document.getElementById('kpi-pnl-card').className='kpi '+(total>=0?'up':'dn');
+910   document.getElementById('kpi-wr').textContent=wr.toFixed(1)+'%';
+911   document.getElementById('kpi-wl').textContent=wins.length+'W / '+losses.length+'L';
+912   document.getElementById('kpi-rr').textContent=rr.toFixed(2);
+913   document.getElementById('kpi-rr-card').className='kpi '+(rr>=1.5?'up':'warn');
+914   // Bottom bar
+915   document.getElementById('bb-trades').textContent='Trades: '+trades.length;
+916   document.getElementById('bb-pnl').textContent='P&L: '+(total>=0?'+':'')+'$'+total.toFixed(2);
+917   // Equity chart
+918   const sorted=[...trades].sort((a,b)=>a.date.localeCompare(b.date));
+919   let cum=0;const eqL=['Start'],eqD=[0];
+920   sorted.forEach(t=>{cum+=parseFloat(t.profit||0);eqL.push(t.pair);eqD.push(+cum.toFixed(2));});
+921   if(eqChartInst)eqChartInst.destroy();
+922   eqChartInst=new Chart(document.getElementById('eqChart'),{type:'line',data:{labels:eqL,datasets:[{data:eqD,borderColor:'#00E87B',backgroundColor:'rgba(0,232,123,0.04)',fill:true,tension:0.3,pointRadius:2,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{ticks:{font:{size:10},color:'#8892a8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+923   // Pair chart
+924   const pm={};trades.forEach(t=>{pm[t.pair]=(pm[t.pair]||0)+parseFloat(t.profit||0);});
+925   const pp=Object.entries(pm).sort((a,b)=>b[1]-a[1]);
+926   if(pairChartInst)pairChartInst.destroy();
+927   if(pp.length)pairChartInst=new Chart(document.getElementById('pairChart'),{type:'bar',data:{labels:pp.map(x=>x[0]),datasets:[{data:pp.map(x=>+x[1].toFixed(2)),backgroundColor:pp.map(x=>x[1]>=0?'rgba(0,232,123,0.15)':'rgba(255,59,92,0.15)'),borderColor:pp.map(x=>x[1]>=0?'#00E87B':'#FF3B5C'),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#8892a8'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#8892a8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+928   // Recent trades
+929   const rtl=document.getElementById('recent-trades-list');
+930   if(!trades.length){rtl.innerHTML='<div class="empty-state" style="padding:1rem;font-size:11px">No trades logged yet</div>';return;}
+931   const recent=[...trades].sort((a,b)=>b.id-a.id).slice(0,8);
+932   rtl.innerHTML=recent.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--edge);font-family:var(--font-body)">
+933     <span style="font-weight:600;letter-spacing:1px;font-size:12px">${t.pair}</span>
+934     <span style="font-size:11px;color:${t.type==='buy'?'var(--green)':'var(--red)'};letter-spacing:1px">${t.type.toUpperCase()}</span>
+935     <span style="color:${t.profit>=0?'var(--green)':'var(--red)'};font-weight:600;font-size:12px">${t.profit>=0?'+':''}$${parseFloat(t.profit).toFixed(2)}</span>
+936     <span style="font-size:11px;color:var(--gray)">${t.date}</span>
+937   </div>`).join('');
+938 }
+939 
+940 // ===================== PERFORMANCE PAGE =====================
+941 function renderPerformancePage(){
+942   const total=trades.reduce((s,t)=>s+parseFloat(t.profit||0),0);
+943   const wins=trades.filter(t=>t.profit>0),losses=trades.filter(t=>t.profit<0);
+944   const wr=trades.length?wins.length/trades.length*100:0;
+945   const dd=Math.min(...trades.reduce((acc,t)=>{const last=acc[acc.length-1]+parseFloat(t.profit||0);acc.push(last);return acc;},[0]))||0;
+946   document.getElementById('perf-stats').innerHTML=`
+947     <div class="ps"><div class="ps-val ${total>=0?'cg':'cr'}">${total>=0?'+':''}$${total.toFixed(2)}</div><div class="ps-lbl">Total P&L</div></div>
+948     <div class="ps"><div class="ps-val ct">${wr.toFixed(1)}%</div><div class="ps-lbl">Win Rate</div></div>
+949     <div class="ps"><div class="ps-val ca">${trades.length}</div><div class="ps-lbl">Total Trades</div></div>
+950     <div class="ps"><div class="ps-val cr">${dd.toFixed(2)}</div><div class="ps-lbl">Max Drawdown</div></div>
+951     <div class="ps"><div class="ps-val cg">${wins.length?'+$'+(wins.reduce((s,t)=>s+t.profit,0)/wins.length).toFixed(2):'$0'}</div><div class="ps-lbl">Avg Win</div></div>
+952     <div class="ps"><div class="ps-val cr">${losses.length?'$'+(losses.reduce((s,t)=>s+t.profit,0)/losses.length).toFixed(2):'$0'}</div><div class="ps-lbl">Avg Loss</div></div>
+953   `;
+954   const sorted=[...trades].sort((a,b)=>a.date.localeCompare(b.date));
+955   let cum=0;const eqL=[],eqD=[];
+956   sorted.forEach(t=>{cum+=parseFloat(t.profit||0);eqL.push(t.date);eqD.push(+cum.toFixed(2));});
+957   if(perfEqInst)perfEqInst.destroy();
+958   if(eqD.length)perfEqInst=new Chart(document.getElementById('perf-eq-chart'),{type:'line',data:{labels:eqL,datasets:[{data:eqD,borderColor:'#00E87B',backgroundColor:'rgba(0,232,123,0.04)',fill:true,tension:0.3,pointRadius:0,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{ticks:{font:{size:10},color:'#8892a8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+959   // Monthly
+960   const monthly={};
+961   trades.forEach(t=>{const m=t.date.slice(0,7);monthly[m]=(monthly[m]||0)+parseFloat(t.profit||0);});
+962   const ml=Object.keys(monthly).sort(),md=ml.map(m=>+monthly[m].toFixed(2));
+963   if(monthlyInst)monthlyInst.destroy();
+964   if(ml.length)monthlyInst=new Chart(document.getElementById('monthly-chart'),{type:'bar',data:{labels:ml,datasets:[{data:md,backgroundColor:md.map(v=>v>=0?'rgba(0,232,123,0.15)':'rgba(255,59,92,0.15)'),borderColor:md.map(v=>v>=0?'#00E87B':'#FF3B5C'),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#8892a8'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#8892a8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+965   const pm={};trades.forEach(t=>{pm[t.pair]=(pm[t.pair]||0)+parseFloat(t.profit||0);});
+966   const pp=Object.entries(pm).sort((a,b)=>b[1]-a[1]);
+967   if(perfPairInst)perfPairInst.destroy();
+968   if(pp.length)perfPairInst=new Chart(document.getElementById('perf-pair-chart'),{type:'bar',data:{labels:pp.map(x=>x[0]),datasets:[{data:pp.map(x=>+x[1].toFixed(2)),backgroundColor:pp.map(x=>x[1]>=0?'rgba(0,232,123,0.15)':'rgba(255,59,92,0.15)'),borderColor:pp.map(x=>x[1]>=0?'#00E87B':'#FF3B5C'),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#8892a8'},grid:{display:false}},y:{ticks:{font:{size:9},color:'#8892a8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+969 }
+970 
+971 // ===================== SETTINGS =====================
+972 function changePass(){const p1=document.getElementById('new-pass').value,p2=document.getElementById('new-pass2').value,msg=document.getElementById('pass-msg');if(p1.length<6){msg.style.color='var(--red)';msg.textContent='Min 6 characters.';return;}if(p1!==p2){msg.style.color='var(--red)';msg.textContent='Passwords do not match.';return;}localStorage.setItem('fx_pass',p1);msg.style.color='var(--green)';msg.textContent='Password updated.';}
+973 
+974 // ===================== EQUITY RANGE =====================
+975 function setEqRange(r){['all','30','7'].forEach(x=>{document.getElementById('eq-'+x).className='btn'+(x===r?' btn-amber':'');});}
+976 
+977 // ===================== BALANCE VISIBILITY =====================
+978 function applyBalVis(){
+979   const el=document.getElementById('sb-balance');
+980   if(!el)return;
+981   el.textContent=balHidden?'••••••':balRawValue;
+982   const icon=document.getElementById('eye-icon');
+983   if(!icon)return;
+984   icon.innerHTML=balHidden
+985     ?'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+986     :'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+987   const kpi=document.getElementById('kpi-balance');
+988   if(kpi)kpi.textContent=balHidden?'••••••':'$'+accountBalance.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+989 }
+990 function toggleBalVis(){
+991   balHidden=!balHidden;
+992   localStorage.setItem('fx_bal_hidden',balHidden?'1':'0');
+993   applyBalVis();
+994 }
+995 
+996 // ===================== BALANCE FROM SUPABASE =====================
+997 async function loadBalance(){
+998   try{
+999     const lk=localStorage.getItem('kfx_license')||localStorage.getItem('fx_license');
+1000     if(!lk) return;
+1001     const r=await fetch('/api/dashboard?action=stats',{headers:{'x-license-key':lk}});
+1002     if(!r.ok)throw new Error();
+1003     const d=await r.json();
+1004     if(d.success && d.stats){
+1005       const s=d.stats;
+1006       // Update balance
+1007       if(s.current_balance){
+1008         accountBalance=s.current_balance;
+1009       } else {
+1010         accountBalance=50000+(s.total_profit||0);
+1011       }
+1012       balRawValue='$'+accountBalance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+1013       applyBalVis();
+1014 
+1015       // Update KPI cards from real Supabase data
+1016       const profit=s.total_profit||0;
+1017       const wr=s.win_rate||0;
+1018       const avgWin=Math.abs(s.avg_win||0);
+1019       const avgLoss=Math.abs(s.avg_loss||0);
+1020       const rr=avgLoss>0?(avgWin/avgLoss):0;
+1021       const pnlPct=accountBalance>0?(profit/50000*100):0;
+1022 
+1023       const pnlCard=document.getElementById('kpi-pnl-card');
+1024       if(pnlCard)pnlCard.className='kpi '+(profit>=0?'up':'dn');
+1025       const pnlEl=document.getElementById('kpi-pnl');
+1026       if(pnlEl){pnlEl.textContent=(profit>=0?'+':'')+' $'+profit.toFixed(2);pnlEl.className='kpi-value '+(profit>=0?'cg':'cr');}
+1027       const pnlPctEl=document.getElementById('kpi-pnl-pct');
+1028       if(pnlPctEl)pnlPctEl.textContent=pnlPct.toFixed(2)+'% of balance';
+1029 
+1030       const wrEl=document.getElementById('kpi-wr');
+1031       if(wrEl)wrEl.textContent=wr+'%';
+1032       const wlEl=document.getElementById('kpi-wl');
+1033       if(wlEl)wlEl.textContent=(s.wins||0)+'W / '+(s.losses||0)+'L';
+1034 
+1035       const rrCard=document.getElementById('kpi-rr-card');
+1036       if(rrCard)rrCard.className='kpi '+(rr>=1?'up':'dn');
+1037       const rrEl=document.getElementById('kpi-rr');
+1038       if(rrEl){rrEl.textContent=rr.toFixed(2);rrEl.className='kpi-value '+(rr>=1?'cg':'cr');}
+1039 
+1040       const balEl=document.getElementById('kpi-balance');
+1041       if(balEl)balEl.textContent=balHidden?'••••••':'$'+accountBalance.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+1042 
+1043       // Update bottom bar
+1044       const bbTrades=document.getElementById('bb-trades');
+1045       if(bbTrades)bbTrades.textContent='Trades: '+(s.total_trades||0);
+1046       const bbPnl=document.getElementById('bb-pnl');
+1047       if(bbPnl)bbPnl.textContent='P&L: '+(profit>=0?'+':'')+' $'+profit.toFixed(2);
+1048     }
+1049   }catch(e){console.error('loadBalance error:',e);}
+1050 }
+1051 
+1052 // ===================== EQUITY + TRADES FROM SUPABASE =====================
+1053 async function loadDashboardData(){
+1054   try{
+1055     const lk=localStorage.getItem('kfx_license')||localStorage.getItem('fx_license');
+1056     if(!lk) return;
+1057     const [eqRes, trRes]=await Promise.all([
+1058       fetch('/api/dashboard?action=equity',{headers:{'x-license-key':lk}}),
+1059       fetch('/api/dashboard?action=trades',{headers:{'x-license-key':lk}})
+1060     ]);
+1061     const eqData=await eqRes.json();
+1062     const trData=await trRes.json();
+1063 
+1064     // Render equity curve from Supabase
+1065     if(eqData.success && eqData.equity && eqData.equity.length>1){
+1066       const eq=eqData.equity;
+1067       if(eqChartInst)eqChartInst.destroy();
+1068       eqChartInst=new Chart(document.getElementById('eqChart'),{
+1069         type:'line',
+1070         data:{
+1071           labels:eq.map(e=>e.date),
+1072           datasets:[{data:eq.map(e=>e.balance),borderColor:'#00E87B',backgroundColor:'rgba(0,232,123,0.04)',fill:true,tension:0.3,pointRadius:1,borderWidth:1.5}]
+1073         },
+1074         options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{ticks:{font:{size:10,family:'DM Sans'},color:'#8892a8',callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(255,255,255,0.04)'}}}}
+1075       });
+1076     }
+1077 
+1078     // Render recent trades from Supabase
+1079     if(trData.success && trData.trades && trData.trades.length){
+1080       const recent=trData.trades.slice(0,5);
+1081       document.getElementById('recent-trades-list').innerHTML=recent.map(t=>{
+1082         const p=parseFloat(t.profit||0);
+1083         const col=p>=0?'var(--green)':'var(--red)';
+1084         const sign=p>=0?'+':'';
+1085         return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--edge);font-family:var(--font-body);font-size:12px">
+1086           <div style="display:flex;align-items:center;gap:8px">
+1087             <span style="color:var(--white);font-weight:600;letter-spacing:1px">${t.pair}</span>
+1088             <span style="color:${t.type==='buy'?'var(--green)':'var(--red)'};font-size:11px;letter-spacing:1px">${t.type.toUpperCase()}</span>
+1089           </div>
+1090           <div style="display:flex;align-items:center;gap:12px">
+1091             <span style="color:var(--gray);font-size:11px">${t.lot} lot</span>
+1092             <span style="color:${col};font-weight:600">${sign}$${p.toFixed(2)}</span>
+1093           </div>
+1094         </div>`;
+1095       }).join('')+'<a href="journal.html" style="display:block;text-align:center;padding:8px;font-size:11px;color:var(--green);font-family:var(--font-body);letter-spacing:1px;text-decoration:none;margin-top:4px">View all trades →</a>';
+1096 
+1097       // Render performance by pair from Supabase
+1098       const allTrades=trData.trades;
+1099       const pm={};
+1100       allTrades.forEach(t=>{pm[t.pair]=(pm[t.pair]||0)+parseFloat(t.profit||0);});
+1101       const pp=Object.entries(pm).sort((a,b)=>b[1]-a[1]);
+1102       if(pairChartInst)pairChartInst.destroy();
+1103       if(pp.length){
+1104         pairChartInst=new Chart(document.getElementById('pairChart'),{
+1105           type:'bar',
+1106           data:{labels:pp.map(x=>x[0]),datasets:[{data:pp.map(x=>+x[1].toFixed(2)),backgroundColor:pp.map(x=>x[1]>=0?'rgba(0,232,123,0.15)':'rgba(255,59,92,0.15)'),borderColor:pp.map(x=>x[1]>=0?'#00E87B':'#FF3B5C'),borderWidth:1}]},
+1107           options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11,family:'DM Sans'},color:'#8892a8'},grid:{display:false}},y:{ticks:{font:{size:11,family:'DM Sans'},color:'#8892a8',callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'}}}}
+1108         });
+1109       }
+1110     }
+1111   }catch(e){console.error('loadDashboardData error:',e);}
+1112 }
+1113 
+1114 // ===================== BOTS FROM SUPABASE =====================
+1115 function fmtPing(ts){const d=Math.floor((Date.now()-new Date(ts).getTime())/1000);if(d<60)return d+'s ago';if(d<3600)return Math.floor(d/60)+'m ago';return Math.floor(d/3600)+'h ago';}
+1116 function renderBotItem(s,compact){
+1117   const online=(Date.now()-new Date(s.last_ping).getTime())<300000;
+1118   const cls=online?'running':'stopped';const dot=online?'run':'stop';const lbl=online?'Online':'Offline';const col=online?'var(--green)':'var(--red)';
+1119   if(compact)return`<div class="bot-item ${cls}"><div class="bot-dot ${dot}"></div><div><div class="bot-pair">${s.pair}</div><div class="bot-ea">${s.ea_name||'—'}</div></div><div class="bot-stat"><div class="bot-time">${fmtPing(s.last_ping)}</div><div class="bot-time" style="color:${col}">${lbl}</div></div></div>`;
+1120   return`<div class="bot-item ${cls}"><div class="bot-dot ${dot}"></div><div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:center"><div><div class="bot-pair">${s.pair}</div><div class="bot-ea">Pair</div></div><div><div class="bot-pair" style="font-size:11px">${s.ea_name||'—'}</div><div class="bot-ea">Profile</div></div><div><div class="bot-pair" style="font-size:11px">—</div><div class="bot-ea">Timeframe</div></div><div style="text-align:right"><div class="bot-profit" style="color:${col}">${lbl}</div><div class="bot-time">${fmtPing(s.last_ping)}</div></div></div></div>`;
+1121 }
+1122 async function loadBots(){
+1123   try{
+1124     const r=await fetch('/api/dashboard?action=bots');
+1125     if(!r.ok)throw new Error();
+1126     const d=await r.json();
+1127     const sessions=d.sessions||[];
+1128     const onlineCount=sessions.filter(s=>(Date.now()-new Date(s.last_ping).getTime())<300000).length;
+1129     document.getElementById('active-bots-count').textContent=onlineCount;
+1130     const emptyFull='<div class="empty-state">No active bots</div>';
+1131     const emptyWidget='<div class="empty-state" style="padding:1rem;font-size:11px">No active bots</div>';
+1132     const fullList=document.getElementById('bots-full-list');
+1133     const widgetList=document.getElementById('bot-list');
+1134     if(!sessions.length){fullList.innerHTML=emptyFull;widgetList.innerHTML=emptyWidget;return;}
+1135     fullList.innerHTML=sessions.map(s=>renderBotItem(s,false)).join('');
+1136     widgetList.innerHTML=sessions.slice(0,5).map(s=>renderBotItem(s,true)).join('');
+1137   }catch(_){}
+1138 }
+1139 
+1140 // ===================== INIT =====================
+1141 // Ensure license key is available under both storage keys
+1142 (function(){
+1143   const lk=localStorage.getItem('kfx_license')||localStorage.getItem('fx_license')||'KFX-KIWI-TEST-0001';
+1144   localStorage.setItem('kfx_license',lk);
+1145   localStorage.setItem('fx_license',lk);
+1146 })();
+1147 // Auto-load TradingView chart when signals page is first shown
+1148 const origShowPage=showPage;
+1149 showPage=function(p){origShowPage(p);if(p==='signals'&&!document.getElementById('tradingview_chart').children.length)loadTV();};
+1150 applyBalVis();
+1151 loadBalance();
+1152 loadDashboardData();
+1153 loadBots();
+1154 setInterval(loadBots,60000);
+1155 setInterval(()=>{loadBalance();loadDashboardData();},120000); // Refresh data every 2 min
+1156 updateMarketHours();
+1157 renderCalendar();
+1158 // Deep-link via URL hash (e.g. dashboard.html#journal from other pages)
+1159 (function(){
+1160   const h=window.location.hash.slice(1);
+1161   if(['signals','bots','market-hours','journal','performance','settings'].includes(h))showPage(h);
+1162 })();
+1163 </script>
+1164 </body>
+1165 </html>
+1166 
+
